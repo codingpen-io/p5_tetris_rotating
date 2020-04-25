@@ -1,3 +1,4 @@
+/* eslint-disable */
 import Block from "./block";
 
 export default class GameMap {
@@ -13,8 +14,8 @@ export default class GameMap {
     this.lastDownTime = 0;
     this.arrBlocks = [];
     this.newBlockType = "";
-    this.blockInterval = 5 * 1000;
-    this.downInterval = 1 * 1000;
+    this.downInterval = 1 * 100;
+
     for (let i = 0; i < this.row; i++) {
       let column = [];
       for (let j = 0; j < this.column; j++) {
@@ -24,19 +25,15 @@ export default class GameMap {
       }
       this.arrRow.push(column);
     }
+    this.generateBlock(p5);
   }
   draw(p5) {
     p5.stroke(255, 0, 0);
     for (let i = 0; i < this.row; i++) {
       for (let j = 0; j < this.column; j++) {
-        let cell = this.arrRow[i][j];
-        if (cell === "#") {
-          p5.fill(102);
-        } else if (cell === "I") {
-          p5.fill(0, 255, 255);
-        } else {
-          p5.noFill();
-        }
+        let type = this.arrRow[i][j];
+        if (type == " ") continue;
+        this.setBlockColor(p5, type);
         p5.rect(
           j * this.cellWidth,
           i * this.cellHeight,
@@ -47,44 +44,89 @@ export default class GameMap {
       }
     }
     p5.fill("yellow");
-    console.log("p5.millis():", p5.millis());
-    //debugger;
-    if (
-      this.lastBlockTime == 0 ||
-      p5.millis() - this.lastBlockTime > this.blockInterval
-    ) {
-      //p5.text("time" + elapsed, 100, 100);
-      //console.log("generate block")
-      this.lastBlockTime = p5.millis();
-      this.generateBlock(p5);
-    }
-    if (
-      this.lastDownTime == 0 ||
-      p5.millis() - this.lastDownTime > this.downInterval
-    ) {
-      //p5.text("time" + elapsed, 100, 100);
-      //console.log("generate block")
+    let firstBlock = this.arrBlocks[0];
+    this.checkBlock(p5, firstBlock);
+    if (p5.millis() - this.lastDownTime > this.downInterval) {
       this.lastDownTime = p5.millis();
-      for (let block of this.arrBlocks) {
-        block.row += 1;
-      }
+      if (firstBlock.stop == null) firstBlock.row += 1;
     }
-    //console.log(this.arrBlocks.length);
-    for (let block of this.arrBlocks) {
-      //p5.rect(block.column * this.cellWidth, block.row * this.cellHeight, this.cellWidth, this.cellHeight)
-      block.draw(p5, this.cellWidth, this.cellHeight);
-    }
+    this.setBlockColor(p5, firstBlock.type);
+    firstBlock.draw(p5, this.cellWidth, this.cellHeight);
     p5.text("New Block" + this.newBlockType, this.width + 100, 100);
   }
   generateBlock(p5) {
-    if (this.arrBlocks.length < 30) {
+    while (this.arrBlocks.length < 5) {
       let newBlock = new Block(
         p5,
         p5.random(["I", "J", "L", "O", "S", "T", "Z"])
       );
-      //debugger
-      console.log(newBlock.row, newBlock.col);
       this.arrBlocks.push(newBlock);
+    }
+    console.log("gen", JSON.stringify(this.arrBlocks));
+  }
+  checkBlock(p5, block) {
+    let found = false;
+    // 아래부터 체크하는 게 계산횟수를 줄임.
+    // for (let j = block.arrTiles.length - 1; j >= 0; j--) {
+    for (let j = block.arrTiles.length - 1; j >= 0; j--) {
+      let line = block.arrTiles[j];
+      for (let i = 0; i < line.length; i++) {
+        if (line[i] != ".") {
+          if (this.arrRow[block.row + j + 1][block.col + i] != " ") {
+            found = true;
+            // 하나라도 닿으면 더 이상 계산이 필요 없음.
+            break;
+          }
+          // 아래 처럼 하면 버그가 생김. 오른쪽이나, 상단만 걸쳐서 닿는 경우는
+          // 표시가 안됨
+          // if (found) {
+          //   this.arrRow[block.row + j][block.col + i] = block.type
+          // }
+        }
+      }
+    }
+    if (found) {
+      // 첫번째 원소 제거
+      for (let j = block.arrTiles.length - 1; j >= 0; j--) {
+        let line = block.arrTiles[j];
+        for (let i = 0; i < line.length; i++) {
+          if (line[i] != ".") {
+            this.arrRow[block.row + j][block.col + i] = block.type;
+          }
+        }
+      }
+      this.arrBlocks.shift();
+      this.generateBlock(p5);
+    }
+  }
+  setBlockColor(p5, type) {
+    if (type === "#") {
+      p5.stroke(0);
+      p5.fill(102);
+    } else if (type === "I") {
+      p5.stroke(0);
+      p5.fill(0, 255, 255);
+    } else if (type === "J") {
+      p5.stroke(0, 0, 128);
+      p5.fill(0, 0, 255);
+    } else if (type === "L") {
+      p5.stroke(128, 64, 0);
+      p5.fill(255, 128, 0);
+    } else if (type === "O") {
+      p5.stroke(128, 128, 0);
+      p5.fill(255, 255, 0);
+    } else if (type === "S") {
+      p5.stroke(0, 128, 0);
+      p5.fill(0, 255, 0);
+    } else if (type === "T") {
+      p5.stroke(64, 0, 64);
+      p5.fill(128, 0, 128);
+    } else if (type === "Z") {
+      p5.stroke(128, 0, 0);
+      p5.fill(255, 0, 0);
+    } else {
+      p5.noFill();
+      p5.noStroke();
     }
   }
 }

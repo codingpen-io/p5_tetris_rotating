@@ -8,7 +8,6 @@ let sketch = function(p) {
   p.setup = function() {
     p.createCanvas(window.innerWidth, window.innerHeight);
     p.background(0);
-    p.frameRate(10);
     let gameMapHeight = window.innerHeight;
     let blockSize = gameMapHeight / 22;
     let gameMapWidth = blockSize * 12;

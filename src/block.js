@@ -1,5 +1,6 @@
 export default class Block {
   constructor(p5, type) {
+    this.type = type;
     if (type === "I") {
       this.arrTiles = [[".", "*"], [".", "*"], [".", "*"], [".", "*"]];
     } else if (type === "J") {
@@ -20,9 +21,6 @@ export default class Block {
     //this.col = 9;
   }
   draw(p5, cellWidth, cellHeight) {
-    console.log("cell", cellWidth, cellHeight);
-    p5.stroke(255, 255, 255);
-    p5.fill(0, 255, 0);
     for (let j = 0; j < this.arrTiles.length; j++) {
       let line = this.arrTiles[j];
       for (let i = 0; i < line.length; i++) {
